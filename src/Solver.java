@@ -22,6 +22,9 @@ public class Solver implements SolverInterface {
     IloNumVar[][][] w;
     IloNumVar[][] b;
     List<IloRange> constraintsList;
+    double[][][] greedyX;
+    SolverInterface greedySolver;
+
 
     public Solver() throws IloException {
         this.model = new Model();
@@ -34,7 +37,9 @@ public class Solver implements SolverInterface {
         this.z = new IloNumVar[model.getTrucksNumber()][model.getMaximumAvailableTrips()][model.getTotalOperationTime()];
         this.w = new IloNumVar[model.getTrucksNumber()][model.getMaximumAvailableTrips()][model.getTotalOperationTime()];
         this.b = new IloNumVar[model.getTrucksNumber()][model.getMaximumAvailableTrips()];
+        this.greedySolver = new GreedyAlgorithmSolverWithIterations();
         this.constraintsList = new ArrayList<>();
+        this.greedyX = new double[model.getTrucksNumber()][model.getTanksNumber()][model.getMaximumAvailableTrips()];
     }
 
     public double[][][] getxSolution() {
@@ -49,6 +54,11 @@ public class Solver implements SolverInterface {
         return ySolution;
     }
 
+    @Override
+    public void solveModel(int noOfIterations) {
+
+    }
+
     public void setySolution(double[][] ySolution) {
         this.ySolution = ySolution;
     }
@@ -61,73 +71,39 @@ public class Solver implements SolverInterface {
 
             cplex.setParam(IloCplex.Param.TimeLimit, 7200.0); //Set time limit 1 hours
 
-            Instant start = Instant.now();
-            activateGreedyAlgorithmSolver();
-            int bestSolutionFound = 10000;
-            int iterations = 1;
-            GreedyAlgorithmSolver bestSolverFound = null;
-            SolutionViewer bestSolutionViewer;
-            //running solver
 
+            activateGreedyAlgorithmSolver(100);
+
+            //running solver
             initializeVariables();
             activateConstraintBasicPackage();
             activateObjectiveFunction();
 
 
-//            greedyAlgorithmSolver.solveModel();
-//            SolutionViewer solutionViewer = new SolutionViewer(model, greedyAlgorithmSolver);
-//            solutionViewer.printSolution();
-//            SolutionChecker solutionChecker = new SolutionChecker(model, solutionViewer.getRefinedTruckSolution());
-//            solutionChecker.solutionCheck();
 
-//int indexNeeded = 0;
-//        for (int i=0 ; i<iterations; i++) {
-//            GreedyAlgorithmSolver solver = new GreedyAlgorithmSolver();
-//            solver.solveModel();
-//            SolutionViewer solutionViewer = new SolutionViewer(model, solver);
-//            solutionViewer.printSolution();
-//            SolutionChecker solutionChecker = new SolutionChecker(model, solutionViewer.getTruckSolution());
-//            solutionChecker.solutionCheck();
-//            if (solutionViewer.getLastLoadedTimeslot() < bestSolutionFound) {
-//                bestSolverFound = solver;
-//                indexNeeded = i;
-//                bestSolutionFound = solutionViewer.getLastLoadedTimeslot();
-//            }
-//
-//            if (solutionChecker.isNotGood()) {
-//                System.out.println("Process Stopped Found Errors...");
-//                break;
-//            }
-//        }
-//            GreedyAlgorithmSolver greedyAlgorithmSolver = bestSolverFound;
-//        System.out.println();
-//        bestSolutionViewer = new SolutionViewer(model, bestSolverFound);
-//        System.out.println("********* After "+iterations+" iterations index"+indexNeeded+"the best result is: *********");
-//        bestSolutionViewer.printSolution();
-//        SolutionChecker solutionChecker = new SolutionChecker(model, bestSolutionViewer.getTruckSolution());
-//        solutionChecker.solutionCheck();
-//            Instant end = Instant.now();
-//            Duration timeElapsed = Duration.between(start, end);
-//            System.out.println("Time Elapsed: "+timeElapsed.getSeconds()+" sec");
+
+
+
 
 
 //end of greedy solver implementation
 
-//            for (int n = 0; n < model.getTrucksNumber(); n++) {
-//                for (int i = 0; i < model.getTanksNumber(); i++) {
-//                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-//                        greedyX[n][i][k] = 0;
-//                    }
-//                }
-//            }
-//
-//            for (int n = 0; n < model.getTrucksNumber(); n++) {
-//                for (int i = 0; i < model.getTanksNumber(); i++) {
-//                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-//                        greedyX[n][i][k] = greedyAlgorithmSolver.getxSolution()[n][i][k];
-//                    }
-//                }
-//            }
+
+            for (int n = 0; n < model.getTrucksNumber(); n++) {
+                for (int i = 0; i < model.getTanksNumber(); i++) {
+                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+                        greedyX[n][i][k] = 0;
+                    }
+                }
+            }
+
+            for (int n = 0; n < model.getTrucksNumber(); n++) {
+                for (int i = 0; i < model.getTanksNumber(); i++) {
+                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+                        greedyX[n][i][k] = greedySolver.getxSolution()[n][i][k];
+                    }
+                }
+            }
 
 
             //!!!Declare the Constraints!!!
@@ -257,65 +233,65 @@ public class Solver implements SolverInterface {
             double[][][] wVariable = new double[model.getTrucksNumber()][model.getMaximumAvailableTrips()][model.getTotalOperationTime()];
 
 
-//            for (int n = 0; n < model.getTrucksNumber(); n++) {
-//                for (int i = 0; i < model.getTanksNumber(); i++) {
-//                    for (int k = model.getMaximumAvailableTrips() - 1; k >= 0; k--) {
-//                        xVariable[n][i][k] = greedyAlgorithmSolver.getxSolution()[n][i][model.getMaximumAvailableTrips() - k-1];
-//                    }
-//                }
-//            }
+            for (int n = 0; n < model.getTrucksNumber(); n++) {
+                for (int i = 0; i < model.getTanksNumber(); i++) {
+                    for (int k = model.getMaximumAvailableTrips() - 1; k >= 0; k--) {
+                        xVariable[n][i][k] = greedySolver.getxSolution()[n][i][model.getMaximumAvailableTrips() - k-1];
+                    }
+                }
+            }
             int[] truckTotalTrips = new int[model.getTrucksNumber()];
             for (int p = 0; p < model.getTrucksNumber(); p++) {
                 truckTotalTrips[p] = 0;
             }
 
             //for each truck
-//
-//
-//                            //calculate total trips per truck
-//                            for (int p = 0; p < model.getTrucksNumber(); p++) {
-//                                for (int i = 0; i < model.getTanksNumber(); i++) {
-//                                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-//                                    xVariable[p][i][k] = 0;//initialize to zeros
-//                                        if (greedyAlgorithmSolver.getxSolution()[p][i][k] == 1) {
-//                                        truckTotalTrips[p]++;
-//                                        }
-//                                    }
-//                                }
-//                            }
-//
-//
-//                        for (int n = 0; n < model.getTrucksNumber(); n++) {
-//                        int numberOfTripsBeginsFrom = model.getMaximumAvailableTrips()-truckTotalTrips[n];
-//
-//                            for (int i = 0; i < model.getTanksNumber(); i++) {
-//                                int tempCounter = 0;
-//                                for (int k = numberOfTripsBeginsFrom; k < model.getMaximumAvailableTrips(); k++) {
-//                                    xVariable[n][i][k] = greedyAlgorithmSolver.getxSolution()[n][i][tempCounter];
-//                                    tempCounter++;
-//                                }
-//                            }
-//                        }
-//
-//
-//
-//            ArrayList<Integer> tempList = new ArrayList<>();
-//
-//            for (int n = 0; n < model.getTrucksNumber(); n++) {
-//                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-//                        if (greedyAlgorithmSolver.getySolution()[n][k] == 0) {
-//                            tempList.add(model.getTruckLoadingTime()[n]);
-//                        } else {
-//                            tempList.add((int) greedyAlgorithmSolver.getySolution()[n][k]);
-//                        }
-//                    }
-//
-//                        Collections.sort(tempList);
-//                        for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-//                            yVariable[n][k] = tempList.get(k);
-//                        }
-//                        tempList.clear();
-//            }
+
+
+                            //calculate total trips per truck
+                            for (int p = 0; p < model.getTrucksNumber(); p++) {
+                                for (int i = 0; i < model.getTanksNumber(); i++) {
+                                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+                                    xVariable[p][i][k] = 0;//initialize to zeros
+                                        if (greedySolver.getxSolution()[p][i][k] == 1) {
+                                        truckTotalTrips[p]++;
+                                        }
+                                    }
+                                }
+                            }
+
+
+                        for (int n = 0; n < model.getTrucksNumber(); n++) {
+                        int numberOfTripsBeginsFrom = model.getMaximumAvailableTrips()-truckTotalTrips[n];
+
+                            for (int i = 0; i < model.getTanksNumber(); i++) {
+                                int tempCounter = 0;
+                                for (int k = numberOfTripsBeginsFrom; k < model.getMaximumAvailableTrips(); k++) {
+                                    xVariable[n][i][k] = greedySolver.getxSolution()[n][i][tempCounter];
+                                    tempCounter++;
+                                }
+                            }
+                        }
+
+
+
+            ArrayList<Integer> tempList = new ArrayList<>();
+
+            for (int n = 0; n < model.getTrucksNumber(); n++) {
+                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+                        if (greedySolver.getySolution()[n][k] == 0) {
+                            tempList.add(model.getTruckLoadingTime()[n]);
+                        } else {
+                            tempList.add((int) greedySolver.getySolution()[n][k]);
+                        }
+                    }
+
+                        Collections.sort(tempList);
+                        for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+                            yVariable[n][k] = tempList.get(k);
+                        }
+                        tempList.clear();
+            }
 
 
             for (int t = 0; t < model.getTotalOperationTime(); t++) {
@@ -395,7 +371,7 @@ public class Solver implements SolverInterface {
 
 // Add your MIP start
 
-//cplex.addMIPStart(startX, startXValues);
+cplex.addMIPStart(startX, startXValues);
 
             if (cplex.solve()) {
                 printVariablesValues();
@@ -662,9 +638,9 @@ public class Solver implements SolverInterface {
                 }
 
 //                     Add constraint with a label
-                IloRange constraint10 = (IloRange) cplex.addEq(constraintExpr1, constraintExpr2, "Constraint_10_" + n + "_" + k);
+                IloRange constraint10 = (IloRange) cplex.addEq(constraintExpr1, constraintExpr2, "Constraint_11_" + n + "_" + k);
                 constraintsList.add(constraint10); // Assuming constraintsList is a pre-declared List<IloRange>
-                System.out.println(constraintExpr2.toString());
+//                System.out.println(constraintExpr2.toString());
 //                        cplex.addGe(constraintExpr1, constraintExpr2);
             }
         }//constraint #9
@@ -694,9 +670,9 @@ public class Solver implements SolverInterface {
                 }
 
 
-                IloRange constraint11 = (IloRange) cplex.addEq(constraintExpr1, constraintExpr2, "Constraint_11_" + n + "_" + k);
+                IloRange constraint11 = (IloRange) cplex.addEq(constraintExpr1, constraintExpr2, "Constraint_10_" + n + "_" + k);
                 constraintsList.add(constraint11); // Assuming constraintsList is a pre-declared List<IloRange>
-                System.out.println(constraintExpr2.toString());
+//                System.out.println(constraintExpr2.toString());
 //                        cplex.addEq(constraintExpr1, constraintExpr2);
             }
         }
@@ -817,8 +793,8 @@ public class Solver implements SolverInterface {
 
     }//printVariablesValues
 
-    public void activateGreedyAlgorithmSolver() {
-
+    public void activateGreedyAlgorithmSolver(int noOfIterations) {
+        greedySolver.solveModel(noOfIterations);
     }//activateGreedyAlgorithmSolver
 
 }//class

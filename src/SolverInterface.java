@@ -5,4 +5,6 @@ public interface SolverInterface {
     double[][][] getxSolution();
 
     double[][] getySolution();
+    void solveModel(int noOfIterations);
+
 }

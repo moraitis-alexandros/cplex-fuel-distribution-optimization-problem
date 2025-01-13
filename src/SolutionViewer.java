@@ -275,6 +275,7 @@ public class SolutionViewer {
         int departureTime = lastLoadedTimeslot + 1;
         System.out.println("Departure of Last Loaded Vehicle in Timeslot "+departureTime);
 
+
         //            int[][] timeline = new int[trucksNumber][totalOperationTime];
 //
 //            // Populate the timeline array based on z and w
