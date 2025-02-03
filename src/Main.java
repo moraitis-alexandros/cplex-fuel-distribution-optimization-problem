@@ -5,7 +5,7 @@ import java.util.Arrays;
 public class Main {
     public static void main(String[] args) throws IloException {
         Model model = new Model();
-        SolverInterface solver = new Solver() ;
+        SolverInterface solver = new SolverAdvanced() ;
         solver.solveModel();
         SolutionViewer solutionViewer = new SolutionViewer(model, solver);
         solutionViewer.printSolution();

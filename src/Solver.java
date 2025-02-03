@@ -72,7 +72,7 @@ public class Solver implements SolverInterface {
             cplex.setParam(IloCplex.Param.TimeLimit, 7200.0); //Set time limit 1 hours
 
 
-            activateGreedyAlgorithmSolver(100);
+//            activateGreedyAlgorithmSolver(10);
 
             //running solver
             initializeVariables();
@@ -88,22 +88,22 @@ public class Solver implements SolverInterface {
 
 //end of greedy solver implementation
 
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                for (int i = 0; i < model.getTanksNumber(); i++) {
-                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                        greedyX[n][i][k] = 0;
-                    }
-                }
-            }
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                for (int i = 0; i < model.getTanksNumber(); i++) {
-                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                        greedyX[n][i][k] = greedySolver.getxSolution()[n][i][k];
-                    }
-                }
-            }
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                for (int i = 0; i < model.getTanksNumber(); i++) {
+//                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                        greedyX[n][i][k] = 0;
+//                    }
+//                }
+//            }
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                for (int i = 0; i < model.getTanksNumber(); i++) {
+//                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                        greedyX[n][i][k] = greedySolver.getxSolution()[n][i][k];
+//                    }
+//                }
+//            }
 
 
             //!!!Declare the Constraints!!!
@@ -209,169 +209,169 @@ public class Solver implements SolverInterface {
 //            }//constraint #4b
 
 
-
-
-
-            // Initialize MIP Start Variables
-            IloNumVar[] startX = new IloNumVar[(model.getTrucksNumber() * model.getTanksNumber() * model.getMaximumAvailableTrips()) + (model.getTrucksNumber() * model.getMaximumAvailableTrips())
-                    + (model.getTrucksNumber() * model.getMaximumAvailableTrips() * model.getTotalOperationTime())
-                    + (model.getTrucksNumber() * model.getMaximumAvailableTrips() * model.getTotalOperationTime())];
-            double[] startXValues = new double[model.getTrucksNumber() * model.getTanksNumber() * model.getMaximumAvailableTrips() + (model.getTrucksNumber() * model.getMaximumAvailableTrips())
-                    + (model.getTrucksNumber() * model.getMaximumAvailableTrips() * model.getTotalOperationTime())
-                    + (model.getTrucksNumber() * model.getMaximumAvailableTrips() * model.getTotalOperationTime())];
-
 //
-
-
-            //Transform the x, y, z, w values in a solver format
-
-            //transform x variable
-            //initialize the required variables
-            double[][][] xVariable = new double[model.getTrucksNumber()][model.getTanksNumber()][model.getMaximumAvailableTrips()];
-            double[][] yVariable = new double[model.getTrucksNumber()][model.getMaximumAvailableTrips()];
-            double[][][] zVariable = new double[model.getTrucksNumber()][model.getMaximumAvailableTrips()][model.getTotalOperationTime()];
-            double[][][] wVariable = new double[model.getTrucksNumber()][model.getMaximumAvailableTrips()][model.getTotalOperationTime()];
-
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                for (int i = 0; i < model.getTanksNumber(); i++) {
-                    for (int k = model.getMaximumAvailableTrips() - 1; k >= 0; k--) {
-                        xVariable[n][i][k] = greedySolver.getxSolution()[n][i][model.getMaximumAvailableTrips() - k-1];
-                    }
-                }
-            }
-            int[] truckTotalTrips = new int[model.getTrucksNumber()];
-            for (int p = 0; p < model.getTrucksNumber(); p++) {
-                truckTotalTrips[p] = 0;
-            }
-
-            //for each truck
-
-
-                            //calculate total trips per truck
-                            for (int p = 0; p < model.getTrucksNumber(); p++) {
-                                for (int i = 0; i < model.getTanksNumber(); i++) {
-                                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                                    xVariable[p][i][k] = 0;//initialize to zeros
-                                        if (greedySolver.getxSolution()[p][i][k] == 1) {
-                                        truckTotalTrips[p]++;
-                                        }
-                                    }
-                                }
-                            }
-
-
-                        for (int n = 0; n < model.getTrucksNumber(); n++) {
-                        int numberOfTripsBeginsFrom = model.getMaximumAvailableTrips()-truckTotalTrips[n];
-
-                            for (int i = 0; i < model.getTanksNumber(); i++) {
-                                int tempCounter = 0;
-                                for (int k = numberOfTripsBeginsFrom; k < model.getMaximumAvailableTrips(); k++) {
-                                    xVariable[n][i][k] = greedySolver.getxSolution()[n][i][tempCounter];
-                                    tempCounter++;
-                                }
-                            }
-                        }
-
-
-
-            ArrayList<Integer> tempList = new ArrayList<>();
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                        if (greedySolver.getySolution()[n][k] == 0) {
-                            tempList.add(model.getTruckLoadingTime()[n]);
-                        } else {
-                            tempList.add((int) greedySolver.getySolution()[n][k]);
-                        }
-                    }
-
-                        Collections.sort(tempList);
-                        for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                            yVariable[n][k] = tempList.get(k);
-                        }
-                        tempList.clear();
-            }
-
-
-            for (int t = 0; t < model.getTotalOperationTime(); t++) {
-                for (int n = 0; n < model.getTrucksNumber(); n++) {
-                    for (int k = 1; k < model.getMaximumAvailableTrips(); k++) {
-                        for (int i = 0; i < model.getTanksNumber(); i++) {
-                            if (xVariable[n][i][k] == 1 && yVariable[n][k] == t) {
-                                zVariable[n][k][t - model.getTruckLoadingTime()[n]] = 1;
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                    for (int t = 0; t < model.getTotalOperationTime(); t++) {
-                        for (int k = 0; k < z[n].length; k++) {
-                        if (zVariable[n][k][t] == 1) {
-                            for (int u = t; u < model.getTruckLoadingTime()[n] + t; u++) {
-                                wVariable[n][k][u] = 1;
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            int idxX = 0;
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                for (int i = 0; i < model.getTanksNumber(); i++) {
-                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                        startX[idxX] = x[n][i][k]; // Reference the existing variables
-                        startXValues[idxX] = xVariable[n][i][k]; // Assume greedyX is filled correctly
-                        idxX++;
-
-                    }
-                }
-            }
-
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                    startX[idxX] = y[n][k]; // Reference the existing variables
-                    startXValues[idxX] = yVariable[n][k]; // Assume greedyX is filled correctly
-                    idxX++;
-                }
-            }
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                    for (int t = 0; t < model.getTotalOperationTime(); t++) {
-                        startX[idxX] = z[n][k][t]; // Reference the existing variables
-                        startXValues[idxX] = zVariable[n][k][t]; // Assume greedyX is filled correctly
-                        idxX++;
-                    }
-                }
-            }
-
-            for (int n = 0; n < model.getTrucksNumber(); n++) {
-                for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
-                    for (int t = 0; t < model.getTotalOperationTime(); t++) {
-                        startX[idxX] = w[n][k][t]; // Reference the existing variables
-                        startXValues[idxX] = wVariable[n][k][t]; // Assume greedyX is filled correctly
-                        idxX++;
-                    }
-                }
-            }
-
-
 //
-//            for (int p=0; p < idxX; p++) {
-//                System.out.println("Variable "+startX[p]+ " with value "+startXValues[p]);
+//
+//            // Initialize MIP Start Variables
+//            IloNumVar[] startX = new IloNumVar[(model.getTrucksNumber() * model.getTanksNumber() * model.getMaximumAvailableTrips()) + (model.getTrucksNumber() * model.getMaximumAvailableTrips())
+//                    + (model.getTrucksNumber() * model.getMaximumAvailableTrips() * model.getTotalOperationTime())
+//                    + (model.getTrucksNumber() * model.getMaximumAvailableTrips() * model.getTotalOperationTime())];
+//            double[] startXValues = new double[model.getTrucksNumber() * model.getTanksNumber() * model.getMaximumAvailableTrips() + (model.getTrucksNumber() * model.getMaximumAvailableTrips())
+//                    + (model.getTrucksNumber() * model.getMaximumAvailableTrips() * model.getTotalOperationTime())
+//                    + (model.getTrucksNumber() * model.getMaximumAvailableTrips() * model.getTotalOperationTime())];
+//
+////
+//
+//
+//            //Transform the x, y, z, w values in a solver format
+//
+//            //transform x variable
+//            //initialize the required variables
+//            double[][][] xVariable = new double[model.getTrucksNumber()][model.getTanksNumber()][model.getMaximumAvailableTrips()];
+//            double[][] yVariable = new double[model.getTrucksNumber()][model.getMaximumAvailableTrips()];
+//            double[][][] zVariable = new double[model.getTrucksNumber()][model.getMaximumAvailableTrips()][model.getTotalOperationTime()];
+//            double[][][] wVariable = new double[model.getTrucksNumber()][model.getMaximumAvailableTrips()][model.getTotalOperationTime()];
+//
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                for (int i = 0; i < model.getTanksNumber(); i++) {
+//                    for (int k = model.getMaximumAvailableTrips() - 1; k >= 0; k--) {
+//                        xVariable[n][i][k] = greedySolver.getxSolution()[n][i][model.getMaximumAvailableTrips() - k-1];
+//                    }
+//                }
 //            }
-
-
-// Add your MIP start
-
-cplex.addMIPStart(startX, startXValues);
+//            int[] truckTotalTrips = new int[model.getTrucksNumber()];
+//            for (int p = 0; p < model.getTrucksNumber(); p++) {
+//                truckTotalTrips[p] = 0;
+//            }
+//
+//            //for each truck
+//
+//
+//                            //calculate total trips per truck
+//                            for (int p = 0; p < model.getTrucksNumber(); p++) {
+//                                for (int i = 0; i < model.getTanksNumber(); i++) {
+//                                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                                    xVariable[p][i][k] = 0;//initialize to zeros
+//                                        if (greedySolver.getxSolution()[p][i][k] == 1) {
+//                                        truckTotalTrips[p]++;
+//                                        }
+//                                    }
+//                                }
+//                            }
+//
+//
+//                        for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                        int numberOfTripsBeginsFrom = model.getMaximumAvailableTrips()-truckTotalTrips[n];
+//
+//                            for (int i = 0; i < model.getTanksNumber(); i++) {
+//                                int tempCounter = 0;
+//                                for (int k = numberOfTripsBeginsFrom; k < model.getMaximumAvailableTrips(); k++) {
+//                                    xVariable[n][i][k] = greedySolver.getxSolution()[n][i][tempCounter];
+//                                    tempCounter++;
+//                                }
+//                            }
+//                        }
+//
+//
+//
+//            ArrayList<Integer> tempList = new ArrayList<>();
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                        if (greedySolver.getySolution()[n][k] == 0) {
+//                            tempList.add(model.getTruckLoadingTime()[n]);
+//                        } else {
+//                            tempList.add((int) greedySolver.getySolution()[n][k]);
+//                        }
+//                    }
+//
+//                        Collections.sort(tempList);
+//                        for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                            yVariable[n][k] = tempList.get(k);
+//                        }
+//                        tempList.clear();
+//            }
+//
+//
+//            for (int t = 0; t < model.getTotalOperationTime(); t++) {
+//                for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                    for (int k = 1; k < model.getMaximumAvailableTrips(); k++) {
+//                        for (int i = 0; i < model.getTanksNumber(); i++) {
+//                            if (xVariable[n][i][k] == 1 && yVariable[n][k] == t) {
+//                                zVariable[n][k][t - model.getTruckLoadingTime()[n]] = 1;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                    for (int t = 0; t < model.getTotalOperationTime(); t++) {
+//                        for (int k = 0; k < z[n].length; k++) {
+//                        if (zVariable[n][k][t] == 1) {
+//                            for (int u = t; u < model.getTruckLoadingTime()[n] + t; u++) {
+//                                wVariable[n][k][u] = 1;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//
+//            int idxX = 0;
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                for (int i = 0; i < model.getTanksNumber(); i++) {
+//                    for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                        startX[idxX] = x[n][i][k]; // Reference the existing variables
+//                        startXValues[idxX] = xVariable[n][i][k]; // Assume greedyX is filled correctly
+//                        idxX++;
+//
+//                    }
+//                }
+//            }
+//
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                    startX[idxX] = y[n][k]; // Reference the existing variables
+//                    startXValues[idxX] = yVariable[n][k]; // Assume greedyX is filled correctly
+//                    idxX++;
+//                }
+//            }
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                    for (int t = 0; t < model.getTotalOperationTime(); t++) {
+//                        startX[idxX] = z[n][k][t]; // Reference the existing variables
+//                        startXValues[idxX] = zVariable[n][k][t]; // Assume greedyX is filled correctly
+//                        idxX++;
+//                    }
+//                }
+//            }
+//
+//            for (int n = 0; n < model.getTrucksNumber(); n++) {
+//                for (int k = 0; k < model.getMaximumAvailableTrips(); k++) {
+//                    for (int t = 0; t < model.getTotalOperationTime(); t++) {
+//                        startX[idxX] = w[n][k][t]; // Reference the existing variables
+//                        startXValues[idxX] = wVariable[n][k][t]; // Assume greedyX is filled correctly
+//                        idxX++;
+//                    }
+//                }
+//            }
+//
+//
+////
+////            for (int p=0; p < idxX; p++) {
+////                System.out.println("Variable "+startX[p]+ " with value "+startXValues[p]);
+////            }
+//
+//
+//// Add your MIP start
+//
+//cplex.addMIPStart(startX, startXValues);
 
             if (cplex.solve()) {
                 printVariablesValues();
@@ -494,6 +494,7 @@ cplex.addMIPStart(startX, startXValues);
         }
     }
 }//activateObjectiveFunction
+
 
     public void activateConstraint1() throws IloException {
         //Constraint #1
@@ -638,9 +639,9 @@ cplex.addMIPStart(startX, startXValues);
                 }
 
 //                     Add constraint with a label
-                IloRange constraint10 = (IloRange) cplex.addEq(constraintExpr1, constraintExpr2, "Constraint_11_" + n + "_" + k);
+                IloRange constraint10 = (IloRange) cplex.addEq(constraintExpr1, constraintExpr2, "Constraint_10_" + n + "_" + k);
                 constraintsList.add(constraint10); // Assuming constraintsList is a pre-declared List<IloRange>
-//                System.out.println(constraintExpr2.toString());
+                System.out.println(constraintExpr2.toString());
 //                        cplex.addGe(constraintExpr1, constraintExpr2);
             }
         }//constraint #9
@@ -670,9 +671,9 @@ cplex.addMIPStart(startX, startXValues);
                 }
 
 
-                IloRange constraint11 = (IloRange) cplex.addEq(constraintExpr1, constraintExpr2, "Constraint_10_" + n + "_" + k);
+                IloRange constraint11 = (IloRange) cplex.addEq(constraintExpr1, constraintExpr2, "Constraint_11_" + n + "_" + k);
                 constraintsList.add(constraint11); // Assuming constraintsList is a pre-declared List<IloRange>
-//                System.out.println(constraintExpr2.toString());
+                System.out.println(constraintExpr2.toString());
 //                        cplex.addEq(constraintExpr1, constraintExpr2);
             }
         }
@@ -690,6 +691,7 @@ cplex.addMIPStart(startX, startXValues);
         activateConstraint9();
         activateConstraint10();
     }//
+
 
     public void printVariablesValues() throws IloException {
         for (int n = 0; n < model.getTrucksNumber(); n++) {
