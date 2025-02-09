@@ -7,7 +7,7 @@ This project develops a **mathematical formulation** and provides solutions for 
 In military operations, **fuel distribution** plays a critical role in sustaining logistical operations. The refueling process involves **transporting fuel from a port to multiple demand points (storage tanks) using a heterogeneous fleet of military vehicles**. Due to **operational risks**, tankers must leave the port **as soon as possible** to minimize exposure to threats.
 
 ### 📌 Research Problem  
-![Research Problem](images/research_problem.png)
+![Research Problem](research_problem.png)
 
 ## Objective  
 The goal is to **minimize the total makespan** of the operation—specifically, reducing the **departure time of the last loaded vehicle** to enhance efficiency and operational security.
@@ -25,7 +25,7 @@ The goal is to **minimize the total makespan** of the operation—specifically, 
   - ⚡ **Greedy Algorithm:** Developed a heuristic-based greedy algorithm for **solving larger instances faster**.
 
 ### ⚡ Greedy Algorithm Implementation  
-![Greedy Algorithm](images/greedy_algorithm.png)
+![Greedy Algorithm](greedy_algorithm.png)
 
 - **Comparative Analysis:**  
   - 📊 Conducted a **performance evaluation** between the MILP model and the greedy approach to assess efficiency.
@@ -39,6 +39,6 @@ The goal is to **minimize the total makespan** of the operation—specifically, 
 ✅ Can be extended to other **time-sensitive fuel distribution and supply chain problems**.
 
 ### 🏗️ Framework Implementation  
-![Framework Implementation](images/framework.png)
+![Framework Implementation](framework_implementation.png)
 
 ---
